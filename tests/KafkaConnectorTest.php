@@ -2,12 +2,12 @@
 
 namespace Test;
 
+use ByJG\MessageQueueClient\Connector\ConnectorFactory;
 use ByJG\MessageQueueClient\Connector\ConnectorInterface;
 
 use ByJG\MessageQueueClient\Envelope;
 use ByJG\MessageQueueClient\Kafka\Topic;
 use ByJG\MessageQueueClient\Message;
-use ByJG\Util\Uri;
 use ByJG\MessageQueueClient\Kafka\KafkaConnector;
 use PHPUnit\Framework\TestCase;
 
@@ -22,10 +22,8 @@ class KafkaConnectorTest extends TestCase
             $host = "localhost:9092";
         }
 
-        $uri = new Uri("kafka://$host");
-        $connection = new KafkaConnector();
-        $connection->setUp($uri);
-        $this->connection = $connection;
+        ConnectorFactory::registerConnector(KafkaConnector::class);
+        $this->connection = ConnectorFactory::create("kafka://$host");
     }
 
     public function clearTopic(string $topic): void

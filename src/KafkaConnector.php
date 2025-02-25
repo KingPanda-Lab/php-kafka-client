@@ -54,7 +54,7 @@ class KafkaConnector implements ConnectorInterface
         return $this->producer;
     }
 
-    public function getConsumer(): KafkaConsumer
+    protected function getConsumer(): KafkaConsumer
     {
         if (!$this->consumer) {
             $this->consumer = new KafkaConsumer($this->conf);
@@ -77,8 +77,6 @@ class KafkaConnector implements ConnectorInterface
         $topicName = $topic->getProperty(self::TOPIC);
         $partition = $topic->getProperty(self::PARTITION);
 
-        $this->conf->set('group.id', $this->uri->getQueryPart('group_id') ?? 'default-group');
-
         $producer = $this->getProducer();
         $topic = $producer->newTopic($topicName);
 
@@ -92,13 +90,17 @@ class KafkaConnector implements ConnectorInterface
         $topicName = $topic->getProperty(self::TOPIC, $topic->getName());
 
         $this->conf->set('auto.offset.reset', $this->uri->getQueryPart('offset_reset') ?? 'earliest');
+        $this->conf->set('group.id', $this->uri->getQueryPart('group_id') ?? 'default-group');
+        $this->conf->set('enable.auto.commit', 'false');
+        $this->conf->set('fetch.min.bytes', '1');
+        $this->conf->set('fetch.wait.max.ms', '10');
 
         $consumer = $this->getConsumer();
         $consumer->subscribe([$topicName]);
 
         try {
             while (true) {
-                $message = $consumer->consume(1000);
+                $message = $consumer->consume(100);
 
                 if ($message->err) {
                     if ($message->err == RD_KAFKA_RESP_ERR__PARTITION_EOF) {
@@ -121,6 +123,10 @@ class KafkaConnector implements ConnectorInterface
                     $result = $onReceive($envelope);
                 } catch (Error|Exception $error) {
                     $result = $onError($envelope, $error);
+                }
+
+                if (($result & Message::ACK) == Message::ACK) {
+                    $this->consumer->commit($message);
                 }
 
                 if (($result & Message::NACK) == Message::NACK && $pipe->getDeadLetter() !== null) {
