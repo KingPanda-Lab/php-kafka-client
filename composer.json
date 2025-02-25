@@ -1,6 +1,7 @@
 {
   "name": "kingpanda-lab/kafka-client",
   "version": "0.1.0",
+  "description": "A minimal kafka stream client using the components of byjg/message-queue-client",
   "autoload": {
     "psr-4": {
       "ByJG\\MessageQueueClient\\Kafka\\": "src/"
