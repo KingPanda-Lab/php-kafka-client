@@ -1,5 +1,5 @@
 
-# Installing Kafka for PHP with rdkafka
+# First steps before using the library
 
 This guide explains how to install and configure the **rdkafka** extension in PHP 8.3, which is a required dependency for the **php-kafka-client** library. This setup enables interaction with Apache Kafka in your PHP applications.
 
